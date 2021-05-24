@@ -1,6 +1,5 @@
 package com.akame.http
 
-import androidx.core.os.BuildCompat
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -8,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 abstract class BaseRetrofitClient {
-    fun <S> getRetrofit(serverClass: Class<S>, baseUrl: String): S =
+    fun <S> create(serverClass: Class<S>, baseUrl: String): S =
         Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(client)
@@ -22,9 +21,9 @@ abstract class BaseRetrofitClient {
                 .connectTimeout(HttpConfig.connectTimeout, TimeUnit.SECONDS)
                 .writeTimeout(HttpConfig.writeTimeout, TimeUnit.SECONDS)
                 .readTimeout(HttpConfig.readTimeout, TimeUnit.SECONDS)
-                .retryOnConnectionFailure(true)
+                .retryOnConnectionFailure(HttpConfig.retryConnect)
                 //添加请求日志
-                .addInterceptor(HttpLoggingInterceptor().setLevel(if (HttpConfig.isDebug) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE))
+                .addInterceptor(HttpLoggingInterceptor().setLevel(if (HttpConfig.printLogEnable) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE))
             return configOkHttpBuilder(builder).build()
         }
 

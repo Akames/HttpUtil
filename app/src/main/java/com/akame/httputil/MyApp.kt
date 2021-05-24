@@ -11,6 +11,7 @@ class MyApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        HttpConfig.isDebug = false
+        HttpConfig.printLogEnable = true
+
     }
 }

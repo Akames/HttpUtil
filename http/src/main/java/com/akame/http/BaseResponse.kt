@@ -1,8 +1,9 @@
 package com.akame.http
 
-interface BaseResponse<T> {
+interface BaseResponse {
     fun isRequestSuccess(): Boolean
-    fun getRequestData(): T?
+
     fun getErrorMsg(): String
-    fun onRequestFail(data: T?)
+
+    fun onRequestFail()
 }

@@ -1,10 +1,10 @@
 package com.akame.http
 
 import android.util.Log
+import androidx.lifecycle.liveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
 
 /**
  * 进行网络请求
@@ -13,53 +13,56 @@ import kotlinx.coroutines.withContext
  * @param fail 网络请求失败，比如断网 参数错误，地址错误等等
  * @param complete 请求完成 不论成功和失败 最终都会回调用 用来处理一些资源回收等 可以不传
  */
-fun <T> ServerImpl.requestServer(
-    requestServer: suspend CoroutineScope.() -> BaseResponse<T>,
-    success: (T?) -> Unit,
-    fail: ((String) -> Unit)? = null,
+//fun <T : BaseResponse> apiRequest(
+//    requestServer: suspend () -> T,
+//) = liveData(Dispatchers.Main) {
+//    try {
+//        emit(Result.loading())
+//        val data = withContext(Dispatchers.IO) {
+//            //进行网络请求 返回请求数据
+//            requestServer()
+//        }
+//        //分析后端返回的数据是否正在的请求成功
+//        if (data.isRequestSuccess()) {
+//            emit(Result.success(data))
+//        } else {
+//            data.onRequestFail()
+//            emit(Result.error(Exception(data.getErrorMsg())))
+//        }
+//    } catch (e: Exception) {
+//        val errorMsg = AnalyzeNetException.analyze(e)
+//        if (HttpConfig.printLogEnable)
+//            Log.e(javaClass.simpleName, errorMsg)
+//        emit(Result.error(e))
+//    } finally {
+//        emit(Result.complete())
+//    }
+//}
+
+
+fun <T : BaseResponse> apiRequest(
+    requestServer: suspend () -> T,
+    fail: ((Exception) -> Unit)? = null,
     complete: (() -> Unit)? = null
-) {
-    launchService(tryBlock = {
+) = liveData(Dispatchers.Main) {
+    try {
         val data = withContext(Dispatchers.IO) {
             //进行网络请求 返回请求数据
             requestServer()
         }
         //分析后端返回的数据是否正在的请求成功
         if (data.isRequestSuccess()) {
-            success(data.getRequestData())
+            emit(data)
         } else {
-            data.onRequestFail(data.getRequestData())
-            fail?.invoke(data.getErrorMsg())
+            data.onRequestFail()
+            fail?.invoke(Exception(data.getErrorMsg()))
         }
-    },
-        catchBlock = {
-            //解析错误
-            filterMsg(it).apply {
-                if (this.isNotEmpty()) {
-                    fail?.invoke(this)
-                }
-            }
-            if (HttpConfig.isDebug)
-                Log.e(javaClass.simpleName, it)
-        },
-        finalBlock = { complete?.invoke() })
-}
-
-
-fun filterMsg(msg: String): String {
-    return when {
-        msg == "Job was cancelled" -> {
-            ""
-        }
-
-        msg.contains("failed to connect") -> {
-            "当前网络超时，请稍后再试！"
-        }
-
-        else -> {
-            msg
-        }
+    } catch (e: Exception) {
+        val errorMsg = AnalyzeNetException.analyze(e)
+        if (HttpConfig.printLogEnable)
+            Log.e(javaClass.simpleName, errorMsg)
+        fail?.invoke(e)
+    } finally {
+        complete?.invoke()
     }
 }
-
-
