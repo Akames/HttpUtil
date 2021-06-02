@@ -3,14 +3,15 @@ package com.akame.httputil
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import androidx.lifecycle.ViewModelProvider
-import com.akame.http.ApiStatue
-import com.akame.httputil.net.Banner
-import com.akame.httputil.net.HttpResponse
+import com.akame.httputil.repository.MainRepository
 import com.akame.httputil.viewmodel.MainViewModel
+import com.akame.httputil.viewmodel.MainViewModelFactory
 
 class MainActivity : AppCompatActivity() {
-    private val mainViewModel by lazy { ViewModelProvider(this)[MainViewModel::class.java] }
+    private val mainViewModel by lazy {
+        MainViewModelFactory(MainRepository()).create(MainViewModel::class.java)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

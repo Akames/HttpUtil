@@ -1,22 +1,9 @@
 package com.akame.http
 
-object Result {
+sealed class Result<T>(val data: T? = null, val exception: Exception? = null) {
+    class Loading : Result<Nothing>()
 
-    fun loading() = ApiResult(ApiStatue.LOADING, null, null)
+    class Success<T>(data: T?) : Result<T>(data)
 
-    fun <T : BaseResponse> success(data: T) = ApiResult(ApiStatue.SUCCESS, data, null)
-
-    fun error(exception: Exception? = null) = ApiResult(ApiStatue.FAIL, null, exception)
-
-    fun complete() = ApiResult(ApiStatue.COMPLETE, null, null)
+    class Error(exception: Exception?) : Result<Nothing>(exception = exception)
 }
-
-data class ApiResult<T>(val statue: ApiStatue, val result: T?, val exception: Exception?)
-
-enum class ApiStatue {
-    SUCCESS,
-    FAIL,
-    LOADING,
-    COMPLETE
-}
-
