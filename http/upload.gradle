@@ -1,0 +1,48 @@
+group 'com.akame'
+version '1.0.0-SNAPSHOT'
+def artifactId = 'httpUtils'
+
+apply plugin: 'maven'
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: 'https://packages.aliyun.com/maven/repository/2214153-release-7UVMS8/') {
+                authentication(
+                        userName: '625142723c6b5273a07c16f2',
+                        password: '4FIOlL1sQFaL'
+                )
+            }
+            snapshotRepository(url: 'https://packages.aliyun.com/maven/repository/2214153-snapshot-HHwnTa/') {
+                authentication(
+                        userName: '625142723c6b5273a07c16f2',
+                        password: '4FIOlL1sQFaL'
+                )
+            }
+            pom.version = "$project.version"
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
+    }
+}
+
+allprojects {
+    repositories {
+        maven {
+            url 'https://maven.aliyun.com/repository/public'
+        }
+        maven {
+            credentials {
+                username '625142723c6b5273a07c16f2'
+                password '4FIOlL1sQFaL'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2214153-release-7UVMS8/'
+        }
+        maven {
+            credentials {
+                username '625142723c6b5273a07c16f2'
+                password '4FIOlL1sQFaL'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2214153-snapshot-HHwnTa/'
+        }
+    }
+}

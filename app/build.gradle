@@ -42,5 +42,4 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.2.0'
 
     implementation project(path: ':http')
-
 }

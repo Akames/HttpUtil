@@ -1,6 +1,5 @@
 package com.akame.http
 
-import android.util.Log
 import androidx.lifecycle.liveData
 import kotlinx.coroutines.*
 
@@ -21,9 +20,7 @@ fun <T : BaseResponse> apiRequest(
         })
     } catch (e: Exception) {
         val errorMsg = AnalyzeNetException.analyze(e)
-        if (HttpConfig.printLogEnable)
-            Log.e(javaClass.simpleName, errorMsg)
-        emit(Result.Error(e))
+        emit(Result.Error(Exception(errorMsg)))
     }
 }
 
@@ -35,9 +32,7 @@ suspend fun <T : BaseResponse> apiRequestNoResult(
             requestServer()
         }.checkResult()
     } catch (e: Exception) {
-        val errorMsg = AnalyzeNetException.analyze(e)
-        if (HttpConfig.printLogEnable)
-            Log.e(javaClass.simpleName, errorMsg)
+        e.printStackTrace()
     }
 }
 
@@ -67,9 +62,7 @@ fun <T : BaseResponse> apiRequest(
         })
     } catch (e: Exception) {
         val errorMsg = AnalyzeNetException.analyze(e)
-        if (HttpConfig.printLogEnable)
-            Log.e(javaClass.simpleName, errorMsg)
-        fail?.invoke(e)
+        fail?.invoke(Exception(errorMsg))
     } finally {
         complete?.invoke()
     }
