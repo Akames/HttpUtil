@@ -1,7 +1,6 @@
 package com.akame.httputil
 
 import android.app.Application
-import com.akame.http.HttpConfig
 
 class MyApp : Application() {
     companion object {
@@ -11,7 +10,5 @@ class MyApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        HttpConfig.printLogEnable = true
-
     }
 }

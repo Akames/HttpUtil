@@ -1,24 +1,22 @@
 package com.akame.httputil.net
 
 import com.akame.http.BaseResponse
+import com.google.gson.annotations.SerializedName
 
 data class HttpResponse<T>(
     var data: T? = null,
-    val status: Int,
-    val resultNum: Int,
-    val total: Int
+    val errorCode: Int,
+    @SerializedName("errorMsg")
+    val errMsg: String,
 ) : BaseResponse {
 
-    override fun isRequestSuccess(): Boolean = status == 100
+    override fun isRequestSuccess(): Boolean = errorCode == 0
 
-
-    override fun getErrorMsg(): String = ""
+    override fun getErrorMsg(): String = errMsg
 
     override fun onRequestFail() {
         //这里判断 业务请求错误
     }
-
-    fun isLastPage(): Boolean = resultNum == total
 }
 
-data class Banner(val image: String, val title: String)
+data class Banner(val imagePath: String, val desc: String)

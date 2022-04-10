@@ -2,25 +2,30 @@ package com.akame.http
 
 import androidx.lifecycle.liveData
 import kotlinx.coroutines.*
+import okhttp3.ResponseBody
+import retrofit2.Response
+import java.io.*
 
 fun <T : BaseResponse> apiRequest(
     requestServer: suspend () -> T,
 ) = liveData(Dispatchers.Main) {
     try {
-        emit(Result.Loading())
+        emit(ServerResult.Loading)
         val data = withContext(Dispatchers.IO) {
             //进行网络请求 返回请求数据
             requestServer()
         }
         //分析后端返回的数据是否正在的请求成功
         data.checkResult({
-            emit(Result.Success(data))
+            emit(ServerResult.Success(data))
         }, {
-            emit(Result.Error(Exception(data.getErrorMsg())))
+            emit(ServerResult.Error(Exception(data.getErrorMsg())))
         })
     } catch (e: Exception) {
         val errorMsg = AnalyzeNetException.analyze(e)
-        emit(Result.Error(Exception(errorMsg)))
+        emit(ServerResult.Error(Exception(errorMsg)))
+    } finally {
+        emit(ServerResult.Complete)
     }
 }
 
@@ -82,5 +87,76 @@ private fun BaseResponse.checkResult() {
     if (!isRequestSuccess()) {
         onRequestFail()
     }
+}
+
+
+suspend fun apiDownload(
+    requestServer: suspend () -> ResponseBody,
+    savePath: String,
+    downloadCallback: DownloadCallback
+) {
+    downloadCallback.onStart()
+    try {
+        val responseBody = withContext(Dispatchers.IO) {
+            requestServer.invoke()
+        }
+        val inputStream = responseBody.byteStream()
+        val totalLength = responseBody.contentLength()
+        writFile(inputStream, getDownFile(savePath), totalLength, downloadCallback)
+    } catch (e: Exception) {
+        downloadCallback.onFail(e.message ?: "")
+    } finally {
+        downloadCallback.onComplete()
+    }
+}
+
+private fun getDownFile(path: String): File {
+    val file = File(path)
+    if (!file.exists()) {
+        if (file.parentFile?.exists() == false) {
+            file.parentFile?.mkdir()
+        }
+        file.createNewFile()
+    }
+    return file
+}
+
+private suspend fun writFile(
+    inputStream: InputStream,
+    file: File,
+    totalLength: Long,
+    callback: DownloadCallback
+) {
+    withContext(Dispatchers.IO) {
+        inputStream.use {
+            BufferedOutputStream(FileOutputStream(file)).use {
+                val byte = ByteArray(1024)
+                var len = 0
+                var currentLen = 0f
+                while ((inputStream.read(byte, 0, 1024).also { len = it }) != -1) {
+                    it.write(byte, 0, len)
+                    currentLen += len
+                    withContext(Dispatchers.Main) {
+                        callback.onProcess(currentLen / totalLength)
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    callback.onSuccess(file)
+                }
+            }
+        }
+    }
+}
+
+interface DownloadCallback {
+    fun onStart()
+
+    fun onComplete()
+
+    fun onSuccess(file: File)
+
+    fun onFail(msg: String)
+
+    fun onProcess(process: Float)
 }
 
