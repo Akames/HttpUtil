@@ -13,7 +13,12 @@ class HttpClientManager<S>(private val server: Class<S>, private val baseUrl: St
     var readTimeout = 10L
     var retryConnect = true
     var isDebug = false
-    var interceptors = ArrayList<Interceptor>()
+    private var interceptors: ArrayList<Interceptor>? = null
+
+    fun addInterceptor(interceptor: Interceptor): HttpClientManager<S> {
+        (interceptors ?: ArrayList()).add(interceptor)
+        return this
+    }
 
     fun crateClientServer(): S {
         return Retrofit.Builder()
@@ -24,14 +29,14 @@ class HttpClientManager<S>(private val server: Class<S>, private val baseUrl: St
             .create(server)
     }
 
-    private fun getHttpClient(interceptors: ArrayList<Interceptor>): OkHttpClient {
+    private fun getHttpClient(interceptors: ArrayList<Interceptor>?): OkHttpClient {
         val client = OkHttpClient.Builder()
             .connectTimeout(connectTimeout, TimeUnit.SECONDS)
             .writeTimeout(writTimeout, TimeUnit.SECONDS)
             .readTimeout(readTimeout, TimeUnit.SECONDS)
             .retryOnConnectionFailure(retryConnect)
             .addInterceptor(getLoggingInterceptor(isDebug))
-        interceptors.forEach {
+        interceptors?.forEach {
             client.addInterceptor(it)
         }
         return client.build()

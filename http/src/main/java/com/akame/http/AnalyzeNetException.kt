@@ -12,17 +12,17 @@ import javax.net.ssl.SSLHandshakeException
 object AnalyzeNetException {
     fun analyze(e: Exception): String {
         return when (e) {
-            is HttpException -> "网络错误"
+            is HttpException -> "netError"
 
-            is JsonParseException -> "解析错误"
+            is JsonParseException -> "parseError"
 
-            is ConnectException, is SocketException, is UnknownHostException -> "连接失败"
+            is ConnectException, is SocketException, is UnknownHostException -> "connectError"
 
-            is SocketTimeoutException -> "连接超时"
+            is SocketTimeoutException -> "timeoutError"
 
-            is SSLHandshakeException -> "证书验证失败"
+            is SSLHandshakeException -> "SSLHandError"
 
-            else -> e.message ?: "未知错误"
+            else -> e.message ?: "unKnowError"
         }
     }
 }

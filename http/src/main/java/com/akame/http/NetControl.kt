@@ -2,9 +2,12 @@ package com.akame.http
 
 import androidx.lifecycle.liveData
 import kotlinx.coroutines.*
+import okhttp3.OkHttp
+import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import retrofit2.Response
 import java.io.*
+import kotlin.contracts.contract
 
 fun <T : BaseResponse> apiRequest(
     requestServer: suspend () -> T,
@@ -41,39 +44,6 @@ suspend fun <T : BaseResponse> apiRequestNoResult(
     }
 }
 
-
-/**
- * 进行网络请求
- * @param requestServer  请求对象
- * @param fail 网络请求失败，比如断网 参数错误，地址错误等等
- * @param complete 请求完成 不论成功和失败 最终都会回调用 用来处理一些资源回收等 可以不传
- */
-fun <T : BaseResponse> apiRequest(
-    requestServer: suspend () -> T,
-    fail: ((Exception) -> Unit)? = null,
-    complete: (() -> Unit)? = null
-) = liveData(Dispatchers.Main) {
-    try {
-        val data = withContext(Dispatchers.IO) {
-            //进行网络请求 返回请求数据
-            requestServer()
-        }
-        //分析后端返回的数据是否正在的请求成功
-        data.checkResult({
-            emit(data)
-        }, {
-            data.onRequestFail()
-            fail?.invoke(Exception(data.getErrorMsg()))
-        })
-    } catch (e: Exception) {
-        val errorMsg = AnalyzeNetException.analyze(e)
-        fail?.invoke(Exception(errorMsg))
-    } finally {
-        complete?.invoke()
-    }
-}
-
-
 private inline fun BaseResponse.checkResult(success: () -> Unit, fail: () -> Unit) {
     if (isRequestSuccess()) {
         success.invoke()
@@ -89,74 +59,4 @@ private fun BaseResponse.checkResult() {
     }
 }
 
-
-suspend fun apiDownload(
-    requestServer: suspend () -> ResponseBody,
-    savePath: String,
-    downloadCallback: DownloadCallback
-) {
-    downloadCallback.onStart()
-    try {
-        val responseBody = withContext(Dispatchers.IO) {
-            requestServer.invoke()
-        }
-        val inputStream = responseBody.byteStream()
-        val totalLength = responseBody.contentLength()
-        writFile(inputStream, getDownFile(savePath), totalLength, downloadCallback)
-    } catch (e: Exception) {
-        downloadCallback.onFail(e.message ?: "")
-    } finally {
-        downloadCallback.onComplete()
-    }
-}
-
-private fun getDownFile(path: String): File {
-    val file = File(path)
-    if (!file.exists()) {
-        if (file.parentFile?.exists() == false) {
-            file.parentFile?.mkdir()
-        }
-        file.createNewFile()
-    }
-    return file
-}
-
-private suspend fun writFile(
-    inputStream: InputStream,
-    file: File,
-    totalLength: Long,
-    callback: DownloadCallback
-) {
-    withContext(Dispatchers.IO) {
-        inputStream.use {
-            BufferedOutputStream(FileOutputStream(file)).use {
-                val byte = ByteArray(1024)
-                var len = 0
-                var currentLen = 0f
-                while ((inputStream.read(byte, 0, 1024).also { len = it }) != -1) {
-                    it.write(byte, 0, len)
-                    currentLen += len
-                    withContext(Dispatchers.Main) {
-                        callback.onProcess(currentLen / totalLength)
-                    }
-                }
-                withContext(Dispatchers.Main) {
-                    callback.onSuccess(file)
-                }
-            }
-        }
-    }
-}
-
-interface DownloadCallback {
-    fun onStart()
-
-    fun onComplete()
-
-    fun onSuccess(file: File)
-
-    fun onFail(msg: String)
-
-    fun onProcess(process: Float)
-}
 

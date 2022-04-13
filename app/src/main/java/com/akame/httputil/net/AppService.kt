@@ -15,7 +15,7 @@ interface AppService {
             return HttpClientManager(AppService::class.java, "https://www.wanandroid.com/")
                 .apply {
                     isDebug = BuildConfig.DEBUG
-                    interceptors.add(ParamsInterceptor())
+                    addInterceptor(ParamsInterceptor())
                 }.crateClientServer()
         }
     }
