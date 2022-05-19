@@ -5,6 +5,7 @@ import kotlinx.coroutines.*
 import okhttp3.OkHttp
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
+import retrofit2.HttpException
 import retrofit2.Response
 import java.io.*
 import kotlin.contracts.contract
@@ -22,11 +23,12 @@ fun <T : BaseResponse> apiRequest(
         data.checkResult({
             emit(ServerResult.Success(data))
         }, {
-            emit(ServerResult.Error(Exception(data.getErrorMsg())))
+            emit(ServerResult.Error(data.getErrorMsg(), data.getErrorCode()))
         })
     } catch (e: Exception) {
         val errorMsg = AnalyzeNetException.analyze(e)
-        emit(ServerResult.Error(Exception(errorMsg)))
+        val errorCode = if (e is HttpException) e.code() else 0
+        emit(ServerResult.Error(errorMsg, errorCode))
     } finally {
         emit(ServerResult.Complete)
     }

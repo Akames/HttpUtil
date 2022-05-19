@@ -44,10 +44,10 @@ private inline fun downLoadFile(
 ) {
     inputStream.use {
         BufferedOutputStream(FileOutputStream(file)).use {
-            val byte = ByteArray(2048)
-            var len = 0
+            val byte = ByteArray(HttpClientManager.DOWNLOAD_SPEED)
+            var len: Int
             var currentLen = 0f
-            while ((inputStream.read(byte, 0, 1024).also { len = it }) != -1) {
+            while ((inputStream.read(byte, 0, byte.size).also { len = it }) != -1) {
                 it.write(byte, 0, len)
                 currentLen += len
                 onProcess.invoke(currentLen / totalLength)

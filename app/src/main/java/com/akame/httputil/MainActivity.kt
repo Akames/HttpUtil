@@ -3,10 +3,10 @@ package com.akame.httputil
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.CalendarView
 import android.widget.ProgressBar
 import android.widget.TextView
-import com.akame.http.DownLoaderResult
-import com.akame.http.ServerResult
+import com.akame.http.*
 import com.akame.httputil.repository.MainRepository
 import com.akame.httputil.viewmodel.MainViewModel
 import com.akame.httputil.viewmodel.MainViewModelFactory
@@ -24,22 +24,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun testSever() {
-        mainViewModel.getBanner().observe(this) {
-            when (it) {
-                is ServerResult.Loading -> {
-                    Log.e("tag", "----> 请求开始")
-                }
-
-                is ServerResult.Success -> {
-                    Log.e("tag", "----> 请求结束 ${it.data!!.data}")
-                }
-
-                is ServerResult.Error -> {
-                    Log.e("tag", "----> 请求错误 ${it.exception!!.message}")
-                }
-
-                is ServerResult.Complete -> {
-                    Log.e("tag", "----> 请求完成")
+        findViewById<CalendarView>(R.id.calendar_view).setOnClickListener {
+            mainViewModel.getBanner().observe(this) { result ->
+                result.doSuccess {
+                    Log.e("tag", "---->> ${it.data}")
+                }.doComplete {
+                    Log.e("tag","------>> 完成1")
+                }.doSuccess {
+                    Log.e("tag", "----->>  我也是成功的 ${it.data}")
+                }.doComplete {
+                    Log.e("tag","------>> 完成2")
+                }.doError {
+                    Log.e(
+                        "Tag",
+                        "----->> 请求错误 ： errorMsg = ${it.errorMessage} code:${it.errorCode} "
+                    )
                 }
             }
         }
@@ -53,19 +52,23 @@ class MainActivity : AppCompatActivity() {
                 mainViewModel.getDownLoadUrl(),
                 mainViewModel.getSavePath(this)
             ).observe(this) {
-                when (it) {
-                    is DownLoaderResult.Start -> Log.e("tag", "------>下载开始")
-                    is DownLoaderResult.Success -> Log.e(
+                it.doStart {
+                    Log.e("tag", "------>下载开始")
+                }.doSuccess {
+                    Log.e(
                         "tag",
                         "----> 下载成功 ${it.file.absolutePath}"
                     )
-                    is DownLoaderResult.Fail -> Log.e("tag", "------> 下载失败 ${it.message}")
-                    is DownLoaderResult.Complete -> Log.e("tag", "------> 下载完成")
-                    is DownLoaderResult.Process -> {
-                        process.progress = (it.process * 100).toInt()
-                    }
+                }.doFail {
+                    Log.e("tag", "------> 下载失败 ${it.message}")
+                }.doComplete {
+                    Log.e("tag", "------> 下载完成")
+                }.doProcess {
+                    process.progress = (it.process * 100).toInt()
                 }
             }
         }
     }
+
+
 }

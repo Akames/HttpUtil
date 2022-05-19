@@ -5,5 +5,7 @@ interface BaseResponse {
 
     fun getErrorMsg(): String
 
+    fun getErrorCode():Int
+
     fun onRequestFail()
 }

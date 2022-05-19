@@ -1,11 +1,11 @@
 package com.akame.http
 
-sealed class ServerResult<T>(val data: T? = null, val exception: Exception? = null) {
+sealed class ServerResult<T> {
     object Loading : ServerResult<Nothing>()
 
-    class Success<T>(data: T) : ServerResult<T>(data)
+    class Success<T>(val data: T) : ServerResult<T>()
 
-    class Error(exception: Exception) : ServerResult<Nothing>(exception = exception)
+    class Error(val errorMessage: String, val errorCode: Int) : ServerResult<Nothing>()
 
     object Complete : ServerResult<Nothing>()
 }

@@ -13,6 +13,7 @@ class HttpClientManager<S>(private val server: Class<S>, private val baseUrl: St
     var readTimeout = 10L
     var retryConnect = true
     var isDebug = false
+    var downLoadSpeed = 1024
     private var interceptors: ArrayList<Interceptor>? = null
 
     fun addInterceptor(interceptor: Interceptor): HttpClientManager<S> {
@@ -20,14 +21,14 @@ class HttpClientManager<S>(private val server: Class<S>, private val baseUrl: St
         return this
     }
 
-    fun crateClientServer(): S {
-        return Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .client(getHttpClient(interceptors))
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(server)
-    }
+    fun crateClientServer(): S = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .client(getHttpClient(interceptors))
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(server).apply {
+            buildDownLoadConfig()
+        }
 
     private fun getHttpClient(interceptors: ArrayList<Interceptor>?): OkHttpClient {
         val client = OkHttpClient.Builder()
@@ -48,4 +49,12 @@ class HttpClientManager<S>(private val server: Class<S>, private val baseUrl: St
         return HttpLoggingInterceptor().setLevel(level)
     }
 
+    private fun buildDownLoadConfig() {
+        downLoadSpeed = if (downLoadSpeed > 1024) downLoadSpeed else 1024
+        DOWNLOAD_SPEED = downLoadSpeed
+    }
+
+    internal companion object {
+        var DOWNLOAD_SPEED = 1024
+    }
 }

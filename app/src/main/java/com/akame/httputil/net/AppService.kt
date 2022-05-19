@@ -1,6 +1,5 @@
 package com.akame.httputil.net
 
-import com.akame.http.BaseParamsInterceptor
 import com.akame.http.BuildConfig
 import com.akame.http.HttpClientManager
 import com.akame.httputil.params.ParamsInterceptor
@@ -15,6 +14,7 @@ interface AppService {
             return HttpClientManager(AppService::class.java, "https://www.wanandroid.com/")
                 .apply {
                     isDebug = BuildConfig.DEBUG
+                    downLoadSpeed = 1024
                     addInterceptor(ParamsInterceptor())
                 }.crateClientServer()
         }
