@@ -10,4 +10,6 @@ class MainRepository {
     fun loadMain() = apiRequest { AppService.getHttpRequest().getTest() }
 
     suspend fun loadMain3() = apiRequestNoResult { AppService.getHttpRequest().getTest() }
+
+    suspend fun testFlow() = AppService.getHttpRequest().getTest()
 }

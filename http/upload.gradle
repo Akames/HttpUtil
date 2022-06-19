@@ -1,29 +1,37 @@
-group 'com.akame'
-version '1.0.0-SNAPSHOT'
-def artifactId = 'httpUtils'
+apply plugin: 'maven-publish'
 
-apply plugin: 'maven'
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            repository(url: 'https://packages.aliyun.com/maven/repository/2214153-release-7UVMS8/') {
-                authentication(
-                        userName: '625142723c6b5273a07c16f2',
-                        password: '4FIOlL1sQFaL'
-                )
+def GROUP = 'com.akame'
+def VERSION = '1.0.0-SNAPSHOT'
+def ARTIFACTID = 'httpUtils'
+
+afterEvaluate {
+    publishing {
+        repositories {
+            maven {
+                // 基于版本名称选择不同的仓库地址
+                def releasesRepoUrl = "https://packages.aliyun.com/maven/repository/2214153-release-7UVMS8/"
+                def snapshotsRepoUrl = "https://packages.aliyun.com/maven/repository/2214153-snapshot-HHwnTa/"
+                // url是必须要配置的
+                url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+                // 仓库用户名密码
+                credentials {
+                    username '625142723c6b5273a07c16f2' // 仓库发布用户名
+                    password '4FIOlL1sQFaL' // 仓库发布用户密码
+                }
             }
-            snapshotRepository(url: 'https://packages.aliyun.com/maven/repository/2214153-snapshot-HHwnTa/') {
-                authentication(
-                        userName: '625142723c6b5273a07c16f2',
-                        password: '4FIOlL1sQFaL'
-                )
+        }
+
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = GROUP
+                artifactId = ARTIFACTID// artifactId
+                version = VERSION // 发布版本
             }
-            pom.version = "$project.version"
-            pom.artifactId = "$artifactId"
-            pom.groupId = "$project.group"
         }
     }
 }
+
 
 allprojects {
     repositories {
